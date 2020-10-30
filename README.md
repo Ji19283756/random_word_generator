@@ -1,1 +1,2 @@
 # random_word_generator
+Generates a word that (probably) doesn't exist, the user can say how long the word should be, how many are needed, and (optionally) what the word should start with. The program will then try to predict the letters that should come after. After the word is made, it is checked to see if it has any pairs or triplets of letters that do not occur in any word in the english language. The resulting words are then displayed to the user.
