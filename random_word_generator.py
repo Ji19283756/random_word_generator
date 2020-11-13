@@ -1,33 +1,38 @@
-from random import choice, randrange
+from random import choice, randrange, choices
+from operator import mul as multiply
 
 
-def name_maker(length=None, range_of_length=None, consecutive_consonants_allowed=2,
-               consecutive_vowels_allowed=2, amount_needed=1,
-               start_word_with="", give_analysis=False) -> str or list:
-    def amount_of_consecutive_consonants(temp_string: list) -> int:
-        number_of_consecutive_consonants = 0
-        for letter in reversed(temp_string):
-            if letter in consonants:
-                number_of_consecutive_consonants += 1
-            else:
-                break
-        return number_of_consecutive_consonants
+def name_maker(**kwargs) -> str or list:
+    def amount_of_consecutive_consonants(temp_string: list, set_vowels: set) -> int:
+        for amount, letter in enumerate(temp_string[::-1]):
+            if letter in set_vowels:
+                return amount
+        else:
+            return 0
 
-    def amount_of_consecutive_vowels(temp_string: list) -> int:
-        number_of_vowels_consonants = 0
-        for letter in reversed(temp_string):
-            if letter in vowels:
-                number_of_vowels_consonants += 1
-            else:
-                break
-        return number_of_vowels_consonants
+    def amount_of_consecutive_vowels(temp_string: list, set_vowels: set) -> int:
+        for amount, letter in enumerate(temp_string[::-1]):
+            if letter not in set_vowels:
+                return amount
+        else:
+            return 0
 
-    if length is None and range_of_length is None:
+    length = kwargs.get("length", None)
+    range_of_length = kwargs.get("range_of_length", None)
+
+    if length is None is range_of_length:
         print("provide a length")
         return
-    if not isinstance(consecutive_consonants_allowed, int) or \
-            not isinstance(consecutive_vowels_allowed, int) or \
-            not isinstance(amount_needed, int):
+
+    consecutive_consonants_allowed = kwargs.get("consecutive_consonants_allowed", 2)
+    consecutive_vowels_allowed = kwargs.get("consecutive_vowels_allowed", 2)
+
+    give_analysis = kwargs.get("give_analysis", False)
+    start_word_with = kwargs.get("start_word_with", "")
+    amount_needed = kwargs.get("amount_needed", 1)
+
+    checks = [consecutive_consonants_allowed, consecutive_vowels_allowed, amount_needed]
+    if any(not isinstance(needs_to_be_int, int) for needs_to_be_int in checks):
         print("provide an int for consecutive vowels or consonants allowed or amount needed")
         return
     a = [100, 2000, 3300, 5200, 2, 1200, 1800, 500, 3900, 100, 1200, 5700, 2600, 18100, 100, 2000, 100, 7500, 9500,
@@ -140,9 +145,7 @@ def name_maker(length=None, range_of_length=None, consecutive_consonants_allowed
     all_letters = "abcdefghijklmnopqrstuvwxyz"
     consonants = "bcdfghjklmnpqrstvwxz"
     vowels = "aeiouy"
-
-    def multiply(num_a: int or str, num_b: int or str) -> int or str:
-        return num_a * num_b
+    vowels_turned_to_set = set(vowels)
 
     # sets up the general most probable letter after letter
     likely_letter_after_letter = [
@@ -171,24 +174,23 @@ def name_maker(length=None, range_of_length=None, consecutive_consonants_allowed
 
     all_words = []
     while len(all_words) < amount_needed:
-
-        length = randrange(range_of_length[0], range_of_length[1]) if range_of_length is not None\
+        length = randrange(range_of_length[0], range_of_length[1]) if range_of_length is not None \
             else length
 
-        string = [choice(normal_distribution_of_letters)] if not start_word_with\
+        string = [choice(normal_distribution_of_letters)] if not start_word_with \
             else list(str(start_word_with))
 
         print(f"the length of the word will be {length}" * give_analysis, end="\n" * give_analysis)
         for x in range(length - len(string)):
             # sees how much consecutive consonants are in string, if theres too many, then it will
             # provide a vowel
-            if amount_of_consecutive_consonants(string) >= consecutive_consonants_allowed:
+            if amount_of_consecutive_consonants(string, vowels_turned_to_set) >= consecutive_consonants_allowed:
                 print(f"string {string}, finding vowel next" * give_analysis, end="\n" * give_analysis)
                 string += [choice(consonant_to_vowel_dict[string[-1]])]
 
             # sees how many consecutive vowels are in a string, if there's too many then it will
             # provide a consonant
-            elif amount_of_consecutive_vowels(string) >= consecutive_vowels_allowed:
+            elif amount_of_consecutive_vowels(string, vowels_turned_to_set) >= consecutive_vowels_allowed:
                 print(f"string {string}, finding consonant next" * give_analysis, end="\n" * give_analysis)
                 string += [choice(vowel_to_consonant_dict[string[-1]])]
 
@@ -196,6 +198,7 @@ def name_maker(length=None, range_of_length=None, consecutive_consonants_allowed
             else:
                 print("just get another random letter" * give_analysis, end="\n" * give_analysis)
                 string += [choice(letter_dict[string[-1]])]
+
             print(end="\n" * give_analysis)
 
         if amount_needed == 1:
@@ -211,20 +214,17 @@ def make_num_x_long(number: int, length: int) -> str:
 
 
 def display_names(list_of_names: list, columns: int):
-    def add_tab(line: str) -> str:
-        return line + "\t"
-
     length_longest_name = max(map(len, list_of_names))
     length_last_number = len(str(len(list_of_names)))
 
-    consistent_names = [f"{make_num_x_long(x + 1, length_last_number)} "
-                        f"{name}{' ' * (length_longest_name - len(name))}\t"
-                        for x, name in enumerate(list_of_names)]
+    consistent_names = [f"{make_num_x_long(x, length_last_number)} "
+                        f"{name}{' ' * (length_longest_name - len(name))}\t\t"
+                        for x, name in enumerate(list_of_names, start=1)]
 
     consistent_names += [f"{' ' * (length_last_number + length_longest_name)}\t"] * \
                         (len(list_of_names) % columns)
 
-    arranged_array = ["".join(map(add_tab, consistent_names[start:start + columns]))
+    arranged_array = ["".join(consistent_names[start:start + columns]) + "\t"
                       for start in range(0, len(consistent_names), columns)]
 
     print("Randomly generated words:\n  ")
@@ -752,18 +752,19 @@ def name_does_not_have_nonexistent_triple_or_double(name: list) -> bool:
 # OPTIONS:____________________________________
 min_name_length = 5
 max_name_length = 9
-names_needed = 49
+start_names_with = ""
+names_needed = 50
 # ____________________________________________
-
 names = []
 while len(names) < names_needed:
     if (names_needed - len(names)) == 1:
         names += [name_maker(range_of_length=(min_name_length, max_name_length),
-                             amount_needed=(names_needed - len(names)))]
+                             amount_needed=(names_needed - len(names)), start_word_with=start_names_with)]
     else:
         names += name_maker(range_of_length=(min_name_length, max_name_length),
-                            amount_needed=(names_needed - len(names)))
+                            amount_needed=(names_needed - len(names)), start_word_with=start_names_with)
 
     names = list(filter(name_does_not_have_nonexistent_triple_or_double, names))
 
 display_names(names, 2)
+
