@@ -1,4 +1,4 @@
-from random import choice, randrange, choices
+from random import choice, randrange
 from operator import mul as multiply
 
 
